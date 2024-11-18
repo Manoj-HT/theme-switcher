@@ -1,8 +1,13 @@
+// Default  imports
 const Applet = imports.ui.applet;
 const Main = imports.ui.main;
 const Settings = imports.ui.settings;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
+
+// Custom imports
+const ConfigureContextMenuWindow = require('./ui/configureContextMenuWindow');
+
 class MyApplet extends Applet.IconApplet {
 
   // Initializer
@@ -11,6 +16,7 @@ class MyApplet extends Applet.IconApplet {
     this.currentTheme = 1;
     this.metadata = metadata;
     this.path = metadata.path;
+    this.configureContextMenu = new ConfigureContextMenuWindow()
     this.themes = {
       theme1: {
         cursor: "Bibata-Original-Ice",
@@ -88,8 +94,9 @@ class MyApplet extends Applet.IconApplet {
 
   // function to manage configure context menu
   _onConfigure() {
-    Main.notify("Theme Switcher", "Configuration option selected!");
-    Util.spawnCommandLine("xdg-open https://gjs.guide");
+    // Main.notify("Theme Switcher", "Configuration option selected!");
+    this.configureContextMenu.show()
+    // Util.spawnCommandLine("xdg-open https://gjs.guide");
   }
 
   // theme switch action
