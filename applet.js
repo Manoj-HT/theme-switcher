@@ -2,7 +2,7 @@ const Applet = imports.ui.applet;
 const Main = imports.ui.main;
 const Settings = imports.ui.settings;
 const Gio = imports.gi.Gio;
-
+const Util = imports.misc.util;
 class MyApplet extends Applet.IconApplet {
   constructor(metadata, orientation, panelHeight, instanceId) {
     super(orientation, panelHeight, instanceId);
@@ -27,10 +27,42 @@ class MyApplet extends Applet.IconApplet {
     this.set_applet_icon_symbolic_name("preferences-desktop-theme");
     this.set_applet_icon_path(`${metadata.path}/${this.themes.theme1.icon}`);
     this.set_applet_tooltip("Click to switch themes");
+    // Ensure the context menu exists before modifying
+    if (this._applet_context_menu) {
+      this._initContextMenu();
+    } else {
+      Main.notify(
+        "Theme Switcher",
+        "Context menu initialization failed. Please check Cinnamon environment."
+      );
+    }
   }
 
   on_applet_clicked() {
     this.switchThemes();
+  }
+
+  _initContextMenu() {
+    const configureMenuItem = new Applet.MenuItem(
+      "Configure...",
+      "preferences-system",
+      () => this._onConfigure()
+    );
+    this._applet_context_menu.addMenuItem(configureMenuItem);
+  }
+
+  _initContextMenu() {
+    const configureMenuItem = new Applet.MenuItem(
+      "Configure...",
+      "preferences-system",
+      () => this._onConfigure()
+    );
+    this._applet_context_menu.addMenuItem(configureMenuItem);
+  }
+
+  _onConfigure() {
+    Main.notify("Theme Switcher", "Configuration option selected!");
+    Util.spawnCommandLine("xdg-open https://gjs.guide");
   }
 
   switchThemes() {
