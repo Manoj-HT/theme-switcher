@@ -4,10 +4,13 @@ const Settings = imports.ui.settings;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
 class MyApplet extends Applet.IconApplet {
+
+  // Initializer
   constructor(metadata, orientation, panelHeight, instanceId) {
     super(orientation, panelHeight, instanceId);
     this.currentTheme = 1;
-    this.metadata = metadata.path;
+    this.metadata = metadata;
+    this.path = metadata.path;
     this.themes = {
       theme1: {
         cursor: "Bibata-Original-Ice",
@@ -25,9 +28,8 @@ class MyApplet extends Applet.IconApplet {
       },
     };
     this.set_applet_icon_symbolic_name("preferences-desktop-theme");
-    this.set_applet_icon_path(`${metadata.path}/${this.themes.theme1.icon}`);
-    this.set_applet_tooltip("Click to switch themes");
-    // Ensure the context menu exists before modifying
+    this.setIconAndTooltip(1);
+    this.initAppletState();
     if (this._applet_context_menu) {
       this._initContextMenu();
     } else {
@@ -38,10 +40,43 @@ class MyApplet extends Applet.IconApplet {
     }
   }
 
+  // initially check if the current theme is in light or dark mode and update accordingly
+  initAppletState() {
+    const currentCursorTheme = this.getCurrentTheme(
+      "org.cinnamon.desktop.interface",
+      "cursor-theme"
+    );
+    const currentDesktopTheme = this.getCurrentTheme(
+      "org.cinnamon.theme",
+      "name"
+    );
+    const currentGtkTheme = this.getCurrentTheme(
+      "org.cinnamon.desktop.interface",
+      "gtk-theme"
+    );
+    if (
+      currentCursorTheme === this.themes.theme1.cursor &&
+      currentDesktopTheme === this.themes.theme1.desktop &&
+      currentGtkTheme === this.themes.theme1.applications
+    ) {
+      this.setIconAndTooltip(1);
+    } else if (
+      currentCursorTheme === this.themes.theme2.cursor &&
+      currentDesktopTheme === this.themes.theme2.desktop &&
+      currentGtkTheme === this.themes.theme2.applications
+    ) {
+      this.setIconAndTooltip(2);
+    } else {
+      this.setIconAndTooltip(1);
+    }
+  }
+
+  // click action event recorded here
   on_applet_clicked() {
     this.switchThemes();
   }
 
+  // function to add context menu items aka right click
   _initContextMenu() {
     const configureMenuItem = new Applet.MenuItem(
       "Configure...",
@@ -51,20 +86,13 @@ class MyApplet extends Applet.IconApplet {
     this._applet_context_menu.addMenuItem(configureMenuItem);
   }
 
-  _initContextMenu() {
-    const configureMenuItem = new Applet.MenuItem(
-      "Configure...",
-      "preferences-system",
-      () => this._onConfigure()
-    );
-    this._applet_context_menu.addMenuItem(configureMenuItem);
-  }
-
+  // function to manage configure context menu
   _onConfigure() {
     Main.notify("Theme Switcher", "Configuration option selected!");
     Util.spawnCommandLine("xdg-open https://gjs.guide");
   }
 
+  // theme switch action
   switchThemes() {
     this.currentTheme = this.currentTheme === 1 ? 2 : 1;
     const theme =
@@ -80,14 +108,25 @@ class MyApplet extends Applet.IconApplet {
       "gtk-theme",
       theme.applications,
     );
-    this.set_applet_tooltip(theme.toolTip);
-    this.set_applet_icon_path(`${this.metadata}/${theme.icon}`);
+    this.setIconAndTooltip(this.currentTheme);
     Main.notify(
       "Theme Switcher",
       `Switched to ${this.currentTheme === 1 ? "Light" : "Dark"} Mode!`,
     );
   }
 
+  // finding current theme
+  getCurrentTheme(schema, key) {
+    try {
+      const gsettings = new Gio.Settings({ schema });
+      return gsettings.get_string(key);
+    } catch (error) {
+      Main.notify("Theme Switcher", `Failed to get ${key}: ${error}`);
+      return null;
+    }
+  }
+
+  // logic for setting theme
   setTheme(schema, key, value) {
     try {
       const gsettings = new Gio.Settings({ schema });
@@ -95,6 +134,14 @@ class MyApplet extends Applet.IconApplet {
     } catch (error) {
       Main.notify("Theme Switcher", `Failed to set ${key}: ${error}`);
     }
+  }
+
+  // param: number
+  setIconAndTooltip(themeNumber) {
+    this.currentTheme = themeNumber;
+    const theme = this.currentTheme === 1 ? this.themes.theme1 : this.themes.theme2;
+    this.set_applet_icon_path(`${this.path}/${theme.icon}`);
+    this.set_applet_tooltip(theme.toolTip);
   }
 }
 
