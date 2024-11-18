@@ -16,7 +16,7 @@ class MyApplet extends Applet.IconApplet {
     this.currentTheme = 1;
     this.metadata = metadata;
     this.path = metadata.path;
-    this.configureContextMenu = new ConfigureContextMenuWindow()
+    this.configureContextMenu = new ConfigureContextMenuWindow(metadata)
     this.themes = {
       theme1: {
         cursor: "Bibata-Original-Ice",
