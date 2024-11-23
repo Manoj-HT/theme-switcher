@@ -1,3 +1,7 @@
+# 9
+
+1. Removed styling and header bar
+
 # 8
 
 1. CSS applied for Configure window

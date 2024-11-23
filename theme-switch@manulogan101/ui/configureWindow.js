@@ -74,41 +74,6 @@ class ConfigureWindow {
             return false;
         })
 
-        // header bar
-        const headerBar = new Gtk.HeaderBar({
-            title: "Standalone App",
-            show_close_button: false,
-        });
-        headerBar.set_hexpand(true);
-        headerBar.set_valign(Gtk.Align.END);
-        headerBar.get_style_context().add_class("header-bar");
-        const minimizeButton = new Gtk.Button({ label: "m" });
-        minimizeButton.connect("clicked", () => {
-            this.window.iconify();
-        });
-
-        // header bar buttons
-        const maximizeButton = new Gtk.Button({ label: "M" });
-        maximizeButton.connect("clicked", () => {
-            if (this.isMaximized()) {
-                this.window.unmaximize();
-            } else {
-                this.window.maximize();
-            }
-        })
-        const closeButton = new Gtk.Button({ label: "C" })
-        closeButton.connect("clicked", () => {
-            this.close();
-        })
-        closeButton.get_style_context().add_class("close-header");
-
-        // header bar configuration
-        headerBar.pack_end(closeButton);
-        headerBar.pack_end(maximizeButton);
-        headerBar.pack_end(minimizeButton);
-       
-        this.window.set_titlebar(headerBar);
-
         // content box
         const contentBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
