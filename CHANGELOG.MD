@@ -1,3 +1,8 @@
+# 7
+
+1. Created simple Gnome app
+2. Binding with configure option
+
 # 6
 
 1. Project structure changed for easier management

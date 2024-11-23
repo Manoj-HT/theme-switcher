@@ -1,0 +1,29 @@
+
+
+.custom-button {
+    background-color: #ff6f61;
+    color: #ffffff;
+    font-size: 16px;
+    border-radius: 60px;
+    padding: 8px;
+    margin: 40px;
+    transition-duration: 5s;
+}
+
+.custom-button:hover {
+    background-color: green;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+.main-window {
+    margin-top: 100px;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.close-header{
+    color: red;
+}
+
+.header-bar{
+    background-color: rgba(0, 0, 0, 0.6);
+}

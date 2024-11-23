@@ -1,14 +1,11 @@
 // Default  imports
 const Applet = imports.ui.applet;
 const Main = imports.ui.main;
-const Settings = imports.ui.settings;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
 
-// Custom imports
-const ConfigureContextMenuWindow = require('./ui/configureContextMenuWindow');
 
-class MyApplet extends Applet.IconApplet {
+class ThemeSwitcher extends Applet.IconApplet {
 
   // Initializer
   constructor(metadata, orientation, panelHeight, instanceId) {
@@ -16,7 +13,6 @@ class MyApplet extends Applet.IconApplet {
     this.currentTheme = 1;
     this.metadata = metadata;
     this.path = metadata.path;
-    this.configureContextMenu = new ConfigureContextMenuWindow(metadata)
     this.themes = {
       theme1: {
         cursor: "Bibata-Original-Ice",
@@ -94,9 +90,14 @@ class MyApplet extends Applet.IconApplet {
 
   // function to manage configure context menu
   _onConfigure() {
-    // Main.notify("Theme Switcher", "Configuration option selected!");
-    this.configureContextMenu.show()
-    // Util.spawnCommandLine("xdg-open https://gjs.guide");
+    // App should open here
+    const standaloneAppPath = `${this.path}/ui/configureWindow.js`;
+    const file = Gio.File.new_for_path(standaloneAppPath);
+    if (!file.query_exists(null)) {
+      Main.notify("Error", `Standalone App script not found at: ${standaloneAppPath}`);
+      return;
+  }
+  Util.spawnCommandLine(`gjs ${standaloneAppPath}`);
   }
 
   // theme switch action
@@ -153,5 +154,5 @@ class MyApplet extends Applet.IconApplet {
 }
 
 function main(metadata, orientation, panelHeight, instanceId) {
-  return new MyApplet(metadata, orientation, panelHeight, instanceId);
+  return new ThemeSwitcher(metadata, orientation, panelHeight, instanceId);
 }
