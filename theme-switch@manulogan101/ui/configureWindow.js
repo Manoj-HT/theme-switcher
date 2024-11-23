@@ -12,7 +12,7 @@ class ConfigureWindow {
 
     addCssStyle(){
         const cssProvider = new Gtk.CssProvider();
-        const cssFile = GLib.build_filenamev([GLib.get_current_dir(), "configureWindow.css"]);
+        const cssFile = ARGV[0];
         try {
             cssProvider.load_from_path(cssFile);
             this.app.connect("startup", () => {
@@ -21,7 +21,7 @@ class ConfigureWindow {
                     Gtk.StyleContext.add_provider_for_screen(
                         screen,
                         cssProvider,
-                        Gtk.STYLE_PROVIDER_PRIORITY_USER
+                        Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
                     );
                 } else {
                     logError(new Error("Gdk.Screen is not available."));

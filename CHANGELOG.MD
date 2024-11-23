@@ -1,3 +1,7 @@
+# 8
+
+1. CSS applied for Configure window
+
 # 7
 
 1. Created simple Gnome app
