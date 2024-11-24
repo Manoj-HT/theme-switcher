@@ -1,3 +1,7 @@
+# 11
+
+1. ARGV updated to take the whole folder
+
 # 10
 
 1. moved icons to media folder

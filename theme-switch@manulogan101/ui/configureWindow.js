@@ -1,5 +1,5 @@
 const {Gio, Gtk, GLib, Gdk} = imports.gi;
-
+const currentFolder = ARGV[0]
 class ConfigureWindow {
     constructor() {
         this.app = new Gtk.Application({
@@ -12,7 +12,7 @@ class ConfigureWindow {
 
     addCssStyle(){
         const cssProvider = new Gtk.CssProvider();
-        const cssFile = ARGV[0];
+        const cssFile = `${currentFolder}/configureWindow.css`;
         try {
             cssProvider.load_from_path(cssFile);
             this.app.connect("startup", () => {
