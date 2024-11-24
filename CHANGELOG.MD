@@ -1,3 +1,8 @@
+# 10
+
+1. moved icons to media folder
+2. updated icon paths to media folder
+
 # 9
 
 1. Removed styling and header bar

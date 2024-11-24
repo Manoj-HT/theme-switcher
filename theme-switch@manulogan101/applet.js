@@ -149,7 +149,7 @@ class ThemeSwitcher extends Applet.IconApplet {
   setIconAndTooltip(themeNumber) {
     this.currentTheme = themeNumber;
     const theme = this.currentTheme === 1 ? this.themes.theme1 : this.themes.theme2;
-    this.set_applet_icon_path(`${this.path}/${theme.icon}`);
+    this.set_applet_icon_path(`${this.path}/media/${theme.icon}`);
     this.set_applet_tooltip(theme.toolTip);
   }
 }

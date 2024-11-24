@@ -4,6 +4,6 @@
   "description": "Switches between dark and light themes when clicked",
   "version": "1.0",
   "max-instances": 1,
-  "icon": "icon.png",
+  "icon": "media/icon.png",
   "settings-schema": "org.cinnamon.theme-switcher"
 }
