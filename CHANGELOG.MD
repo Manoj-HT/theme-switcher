@@ -1,3 +1,9 @@
+# 12
+
+1. Notebook used
+2. split notebook code to different files
+3. imports succesfully created
+
 # 11
 
 1. ARGV updated to take the whole folder

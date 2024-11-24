@@ -1,5 +1,10 @@
-const {Gio, Gtk, GLib, Gdk} = imports.gi;
+// import addings should be before utilising
 const currentFolder = ARGV[0]
+imports.searchPath.push(currentFolder)
+
+//imports
+const {Gio, Gtk, GLib, Gdk} = imports.gi;
+const tabs = imports.tabs
 class ConfigureWindow {
     constructor() {
         this.app = new Gtk.Application({
@@ -67,29 +72,20 @@ class ConfigureWindow {
             default_width: 400,
             default_height: 300,
         })
+
+        // tabs
+        const notebook = new Gtk.Notebook();
+        notebook.append_page(tabs.tabs.userThemesTab(), new Gtk.Label({ label: "Themes" }));
+        notebook.append_page(tabs.tabs.createThemesTab(), new Gtk.Label({ label: "Create" }));
+        
+        // window configuration
         this.window.set_decorated(true);
         this.window.get_style_context().add_class("main-window");
         this.window.connect("delete-event", (widget, event) => {
             this.close();
             return false;
         })
-
-        // content box
-        const contentBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            spacing: 10,
-        });
-
-        // content box items - close button
-        const closeAppButton = new Gtk.Button({ label: "Close App" });
-        closeAppButton.get_style_context().add_class("custom-button");
-        closeAppButton.connect("clicked", () => {
-            this.close();
-        });
-
-        // content box configuration
-        // contentBox.pack_start(closeAppButton, true, true, 0);
-        this.window.add(contentBox);
+        this.window.add(notebook);
 
         // show
         this.window.show_all();
