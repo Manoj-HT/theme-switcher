@@ -85,6 +85,11 @@ class ConfigureWindow {
             this.close();
             return false;
         })
+        let path = currentFolder.split("/")
+        path[path.length - 1] = "media"
+        let mediaPath = path.join("/")
+        const iconPath = GLib.build_filenamev([mediaPath, "configure-theme.svg"]);
+        this.window.set_icon_from_file(iconPath);
         this.window.add(notebook);
 
         // show

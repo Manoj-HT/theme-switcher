@@ -1,3 +1,7 @@
+# 13
+
+1. Configure app icon loaded
+
 # 12
 
 1. Notebook used
