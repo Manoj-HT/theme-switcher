@@ -91,14 +91,12 @@ class ThemeSwitcher extends Applet.IconApplet {
   // function to manage configure context menu
   _onConfigure() {
     // App should open here
-    const configureWindowFolder = `${this.path}/ui`;
-    const mediaWindowFolder = `${this.path}/media`;
-    const file = Gio.File.new_for_path(`${configureWindowFolder}/configureWindow.js`);
+    const file = Gio.File.new_for_path(`${this.path}/configureWindow/configureWindow.js`);
     if (!file.query_exists(null)) {
-      Main.notify("Error", `Standalone App script not found at: ${configureWindowFolder}/configureWindow.js`);
+      Main.notify("Error", `Standalone App script not found at: ${this.path}/configureWindow/configureWindow.js`);
       return;
-  }
-  Util.spawnCommandLine(`gjs ${configureWindowFolder}/configureWindow.js ${configureWindowFolder}`);
+    }
+    Util.spawnCommandLine(`gjs ${this.path}/configureWindow/configureWindow.js ${this.path}`);
   }
 
   // theme switch action

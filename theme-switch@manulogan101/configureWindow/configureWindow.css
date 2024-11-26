@@ -1,0 +1,10 @@
+.option-box {
+    padding: 30px;
+    margin: 10px 50px 10px 50px;
+    border-radius: 20px;
+    border: 2px solid gray;
+}
+
+.choose-app-theme-label {
+    margin-right: 10px;
+}

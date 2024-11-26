@@ -1,3 +1,12 @@
+# 14
+
+1. Folder structure changed: renamed ui folder to configureWindow
+2. added functional box of icon choosing and theme selecting in create tab
+3. changed spawn path to applet folder
+4. added css for functional boxes
+5. added data modifier functions to write and read data
+6. added installed themes and user themes json to store data
+
 # 13
 
 1. Configure app icon loaded

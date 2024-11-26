@@ -1,10 +1,11 @@
 // import addings should be before utilising
-const currentFolder = ARGV[0]
-imports.searchPath.push(currentFolder)
+const appletFolder = ARGV[0]
+imports.searchPath.push(appletFolder)
 
 //imports
-const {Gio, Gtk, GLib, Gdk} = imports.gi;
-const tabs = imports.tabs
+const { Gio, Gtk, GLib, Gdk } = imports.gi;
+const tabs = imports.configureWindow.tabs
+
 class ConfigureWindow {
     constructor() {
         this.app = new Gtk.Application({
@@ -15,9 +16,9 @@ class ConfigureWindow {
         this.addCssStyle();
     }
 
-    addCssStyle(){
+    addCssStyle() {
         const cssProvider = new Gtk.CssProvider();
-        const cssFile = `${currentFolder}/configureWindow.css`;
+        const cssFile = `${appletFolder}/configureWindow/configureWindow.css`;
         try {
             cssProvider.load_from_path(cssFile);
             this.app.connect("startup", () => {
@@ -33,21 +34,20 @@ class ConfigureWindow {
                 }
             });
         } catch (error) {
-            // logError(error);
             console.log(error)
         }
     }
 
-    run(argv){
+    run(argv) {
         return this.app.run(argv);
     }
 
-    onActivate(){
+    onActivate() {
         this.show()
     }
 
-    show(){
-        if(!this.window){
+    show() {
+        if (!this.window) {
             this.createWindow();
         }
         this.window.present();
@@ -58,7 +58,7 @@ class ConfigureWindow {
         return (state & Gdk.WindowState.MAXIMIZED) !== 0;
     }
 
-    close(){
+    close() {
         this.window.close();
         this.window = null;
     }
@@ -75,9 +75,9 @@ class ConfigureWindow {
 
         // tabs
         const notebook = new Gtk.Notebook();
-        notebook.append_page(tabs.tabs.userThemesTab(), new Gtk.Label({ label: "Themes" }));
-        notebook.append_page(tabs.tabs.createThemesTab(), new Gtk.Label({ label: "Create" }));
-        
+        notebook.append_page(tabs.tabs.userThemesTab({ currentFolder: appletFolder }), new Gtk.Label({ label: "Themes" })); 
+        notebook.append_page(tabs.tabs.createThemesTab({ currentFolder: appletFolder }), new Gtk.Label({ label: "Create" })); 
+
         // window configuration
         this.window.set_decorated(true);
         this.window.get_style_context().add_class("main-window");
@@ -85,9 +85,7 @@ class ConfigureWindow {
             this.close();
             return false;
         })
-        let path = currentFolder.split("/")
-        path[path.length - 1] = "media"
-        let mediaPath = path.join("/")
+        let mediaPath = appletFolder + "/media"
         const iconPath = GLib.build_filenamev([mediaPath, "configure-theme.svg"]);
         this.window.set_icon_from_file(iconPath);
         this.window.add(notebook);
