@@ -3,7 +3,7 @@ const Applet = imports.ui.applet;
 const Main = imports.ui.main;
 const Gio = imports.gi.Gio;
 const Util = imports.misc.util;
-
+const dataModify = require('./data/dataModifiers')
 
 class ThemeSwitcher extends Applet.IconApplet {
 
@@ -29,6 +29,7 @@ class ThemeSwitcher extends Applet.IconApplet {
         toolTip: "Switch to light mode",
       },
     };
+    this.userSavedThemes = dataModify.getUserSavedThemes(this.path)
     this.set_applet_icon_symbolic_name("preferences-desktop-theme");
     this.setIconAndTooltip(1);
     this.initAppletState();

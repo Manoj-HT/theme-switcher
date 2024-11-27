@@ -11,3 +11,13 @@ Official documentation: https://developer.linuxmint.com/reference/cinnamon/lates
 JavaScript Basics
 
 Mozilla Developer Network (MDN): https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide
+
+type userThemes = {
+    icon: file-name,
+    applicationTheme: app-theme-name,
+    shellTheme: shell-theme-name,
+    cursor: cursor-name,
+    description: tool-tip,
+    wallpaper: file-name,
+    id: length,
+}[]
