@@ -69,7 +69,7 @@ class ConfigureWindow {
         this.window = new Gtk.ApplicationWindow({
             application: this.app,
             title: "Theme Switcher Configuration",
-            default_width: 400,
+            default_width: 600,
             default_height: 300,
         })
 

@@ -1,3 +1,9 @@
+# 15
+
+1. options created in create tab
+2. readme updated
+3. imported dataModifiers in applet.js
+
 # 14
 
 1. Folder structure changed: renamed ui folder to configureWindow

@@ -1,10 +1,19 @@
-.option-box {
+.create-tab-option-box {
     padding: 30px;
     margin: 10px 50px 10px 50px;
     border-radius: 20px;
-    border: 2px solid gray;
+    border: 2px solid lightgray;
 }
 
-.choose-app-theme-label {
+.create-tab-option-box-label {
     margin-right: 10px;
+}
+
+.create-tab-save-button{
+    padding: 10px 20px;
+}
+
+.create-tab-save-button-box{
+    margin-top: 10px;
+    padding: 0 50px 0 50px;
 }
