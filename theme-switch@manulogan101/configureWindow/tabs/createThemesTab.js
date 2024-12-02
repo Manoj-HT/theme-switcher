@@ -1,35 +1,21 @@
-const { Gtk, GLib, Gio } = imports.gi;
+const { Gtk, GLib, Gio, GdkPixbuf } = imports.gi;
 const dataModify = imports.data.dataModifiers
 
-var tabs = {
-    createThemesTab,
-    userThemesTab,
-};
-
-function userThemesTab({ currentFolder }) {
-    const box = new Gtk.Box({
-        orientation: Gtk.Orientation.VERTICAL,
-        spacing: 10,
-    });
-    const label = new Gtk.Label({ label: currentFolder });
-    box.pack_start(label, true, true, 0);
-    return box;
-}
-
-function createThemesTab({ currentFolder }) {
+function createThemesTab({ currentFolder, window }) {
     const parentBox = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
         spacing: 10,
     });
 
-    const userSavedThemes = dataModify.getUserSavedThemes(currentFolder)
-    const content = new CreateThemesContent(currentFolder, userSavedThemes)
+    const userSavedThemes = dataModify.getUserSavedThemes(currentFolder, window)
+    const content = new CreateThemesContent(currentFolder, userSavedThemes, window)
 
     parentBox.pack_start(content.uploadIconBox(), false, false, 0);
     parentBox.pack_start(content.chooseApplicationThemeBox(), false, false, 0);
     parentBox.pack_start(content.chooseShellThemeBox(), false, false, 0);
     parentBox.pack_start(content.chooseCursorBox(), false, false, 0);
     parentBox.pack_start(content.addDescriptionBox(), false, false, 0);
+    parentBox.pack_start(content.runAtStartBox(), false, false, 0);
     parentBox.pack_start(content.uploadWallPaperBox(), false, false, 0);
     parentBox.pack_start(content.saveButton(), false, false, 0);
 
@@ -37,14 +23,25 @@ function createThemesTab({ currentFolder }) {
 }
 
 class CreateThemesContent {
-    constructor(currentFolder, userSavedThemes) {
+    constructor(currentFolder, userSavedThemes, window) {
         this.currentFolder = currentFolder;
         this.themeList = userSavedThemes;
         this.id = userSavedThemes.length;
-        this.themeList.push({ id: this.id })
+        this.themeList.push({
+            id: this.id,
+            selected: false,
+            atStart: false,
+            icon: "",
+            applicationTheme: "",
+            shellTheme: "",
+            cursor: "",
+            description: "",
+            wallpaper: "",
+        })
         this.theme = this.themeList[this.id]
         this.wallpaper = null;
         this.icon = null;
+        this.window = window
     }
 
     uploadIconBox() {
@@ -68,11 +65,38 @@ class CreateThemesContent {
         fileFilter.set_name("Image Files");
         fileChooser.add_filter(fileFilter);
         fileChooser.connect("file-set", () => {
-            this.icon = fileChooser.get_file();
-            const filename = this.icon.get_basename();
-            this.theme["icon"] = filename;
-            
-            
+            const selectedFile = fileChooser.get_file();
+            const filePath = selectedFile.get_path();
+            try {
+                const pixbuf = GdkPixbuf.Pixbuf.new_from_file(filePath);
+                const width = pixbuf.get_width();
+                const height = pixbuf.get_height();
+                if (width > 128 || height > 128) {
+                    const dialog = new Gtk.MessageDialog({
+                        transient_for: this.window,
+                        modal: true,
+                        buttons: Gtk.ButtonsType.OK,
+                        message_type: Gtk.MessageType.WARNING,
+                        text: "Invalid Image Size",
+                        secondary_text: "Please upload an image with dimensions lesser than 128x128 pixels.",
+                    });
+                    dialog.connect("response", () => {
+                        dialog.destroy();
+                    });
+                    dialog.show();
+                    fileChooser.set_file(null);
+                    this.icon = null;
+                    this.theme["icon"] = "";
+                } else {
+                    this.icon = selectedFile;
+                    const filename = selectedFile.get_basename();
+                    this.theme["icon"] = filename;
+                }
+            }
+            catch (error) {
+                console.error("Error loading image:", error.message);
+            }
+
         });
         container.get_style_context().add_class("create-tab-option-box");
         container.pack_start(label, false, true, 0);
@@ -212,6 +236,42 @@ class CreateThemesContent {
         return container;
     }
 
+    runAtStartBox() {
+        const container = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 10,
+        });
+        const label = new Gtk.Label({
+            label: "Apply at Startup",
+            xalign: 0,
+            hexpand: true,
+        });
+        const toggleButton = new Gtk.Switch({
+            active: false,
+        });
+        toggleButton.connect("state-set", (button, state) => {
+            if (state) {
+                const dialog = new Gtk.MessageDialog({
+                    transient_for: this.window,
+                    modal: true,
+                    buttons: Gtk.ButtonsType.OK,
+                    message_type: Gtk.MessageType.WARNING,
+                    text: "Apply at startup",
+                    secondary_text: "The previously set theme will no longer apply at system startup.",
+                });
+                dialog.connect("response", () => {
+                    dialog.destroy();
+                });
+                dialog.show();
+            }
+            this.theme["atStart"] = state;
+        });
+        container.pack_start(label, false, true, 0);
+        container.pack_start(toggleButton, false, true, 0);
+        container.get_style_context().add_class("create-tab-option-box");
+        return container;
+    }
+
     uploadMedia() {
         const wallpaperFolder = `${this.currentFolder}/userMedia/wallpapers`
         const iconFolder = `${this.currentFolder}/userMedia/icons`
@@ -234,21 +294,27 @@ class CreateThemesContent {
             }
         }
 
-        const wallpaperpath = GLib.build_filenamev([wallpaperFolder, this.wallpaper.get_basename()]);
-        const iconPath = GLib.build_filenamev([iconFolder, this.icon.get_basename()]);
-
-        const wallpaperfile = Gio.File.new_for_path(wallpaperpath);
-        const iconFile = Gio.File.new_for_path(iconPath);
-
-        try {
-            this.wallpaper.copy(wallpaperfile, Gio.FileCopyFlags.OVERWRITE, null, null);
-        } catch (error) {
-            return;
+        if (this.wallpaper == null) {
+            return
+        } else {
+            const wallpaperpath = GLib.build_filenamev([wallpaperFolder, this.wallpaper.get_basename()]);
+            const wallpaperfile = Gio.File.new_for_path(wallpaperpath);
+            try {
+                this.wallpaper.copy(wallpaperfile, Gio.FileCopyFlags.OVERWRITE, null, null);
+            } catch (error) {
+                return;
+            }
         }
-        try {
-            this.icon.copy(iconFile, Gio.FileCopyFlags.OVERWRITE, null, null);
-        } catch (error) {
-            return;
+        if (this.icon == null) {
+            return
+        } else {
+            const iconPath = GLib.build_filenamev([iconFolder, this.icon.get_basename()]);
+            const iconFile = Gio.File.new_for_path(iconPath);
+            try {
+                this.icon.copy(iconFile, Gio.FileCopyFlags.OVERWRITE, null, null);
+            } catch (error) {
+                return;
+            }
         }
     }
 
@@ -265,10 +331,22 @@ class CreateThemesContent {
         saveButton.connect("clicked", () => {
             this.uploadMedia()
             dataModify.setData(this.theme, this.currentFolder)
+            const dialog = new Gtk.MessageDialog({
+                transient_for: this.window,
+                modal: true,
+                buttons: Gtk.ButtonsType.OK,
+                message_type: Gtk.MessageType.INFO,
+                text: "Created",
+                secondary_text: "Theme has been created. Please refresh.",
+            });
+            dialog.connect("response", () => {
+                dialog.destroy();
+            });
+            dialog.show();
         });
-        saveButton.get_style_context().add_class("create-tab-save-button");
+        saveButton.get_style_context().add_class("button-global");
 
-        container.get_style_context().add_class("create-tab-save-button-box");
+        container.get_style_context().add_class("button-global-box");
         container.pack_end(saveButton, false, false, 0);
         return container;
     }

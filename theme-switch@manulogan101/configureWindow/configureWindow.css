@@ -1,19 +1,30 @@
 .create-tab-option-box {
-    padding: 30px;
+    padding: 5px;
     margin: 10px 50px 10px 50px;
     border-radius: 20px;
-    border: 2px solid lightgray;
 }
 
 .create-tab-option-box-label {
     margin-right: 10px;
 }
 
-.create-tab-save-button{
+.button-global {
     padding: 10px 20px;
 }
 
-.create-tab-save-button-box{
-    margin-top: 10px;
+.button-global-box {
     padding: 0 50px 0 50px;
+}
+
+.theme-tab-theme-option {
+    border-radius: 10px;
+    padding: 20px 40px;
+    margin-bottom: 20px;
+}
+
+.theme-tab-theme-list {
+    padding: 25px;
+    margin: 10px 50px 10px 50px;
+    border-radius: 20px;
+    border: 2px solid lightgray;
 }

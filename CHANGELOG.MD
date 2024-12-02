@@ -1,3 +1,12 @@
+# 16
+
+1. moved create tab and user theme tab into seperate files
+2. added user theme tab content
+3. removed tabs file
+4. added apply at start up for create themes
+5. added check for icon for size below 128x128
+6. added dialog to say theme has been saved
+
 # 15
 
 1. options created in create tab

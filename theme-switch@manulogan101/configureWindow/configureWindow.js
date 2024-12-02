@@ -4,7 +4,8 @@ imports.searchPath.push(appletFolder)
 
 //imports
 const { Gio, Gtk, GLib, Gdk } = imports.gi;
-const tabs = imports.configureWindow.tabs
+const { userThemesTab } = imports.configureWindow.tabs.userThemeTab
+const { createThemesTab } = imports.configureWindow.tabs.createThemesTab
 
 class ConfigureWindow {
     constructor() {
@@ -69,14 +70,18 @@ class ConfigureWindow {
         this.window = new Gtk.ApplicationWindow({
             application: this.app,
             title: "Theme Switcher Configuration",
-            default_width: 600,
+            default_width: 900,
             default_height: 300,
         })
 
         // tabs
         const notebook = new Gtk.Notebook();
-        notebook.append_page(tabs.tabs.userThemesTab({ currentFolder: appletFolder }), new Gtk.Label({ label: "Themes" })); 
-        notebook.append_page(tabs.tabs.createThemesTab({ currentFolder: appletFolder }), new Gtk.Label({ label: "Create" })); 
+        const params = {
+            currentFolder: appletFolder,
+            window: this.window,
+        }
+        notebook.append_page(userThemesTab(params), new Gtk.Label({ label: "Themes" }));
+        notebook.append_page(createThemesTab(params), new Gtk.Label({ label: "Create" }));
 
         // window configuration
         this.window.set_decorated(true);
