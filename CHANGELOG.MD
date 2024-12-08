@@ -1,3 +1,10 @@
+# 17
+
+1. styles changed for setting items
+2. added styles for atStart theme
+3. writing changed to replace the whole array
+4. added reset button to reset the settings
+
 # 16
 
 1. moved create tab and user theme tab into seperate files

@@ -7,8 +7,7 @@ function createThemesTab({ currentFolder, window }) {
         spacing: 10,
     });
 
-    const userSavedThemes = dataModify.getUserSavedThemes(currentFolder, window)
-    const content = new CreateThemesContent(currentFolder, userSavedThemes, window)
+    const content = new CreateThemesContent(currentFolder, window)
 
     parentBox.pack_start(content.uploadIconBox(), false, false, 0);
     parentBox.pack_start(content.chooseApplicationThemeBox(), false, false, 0);
@@ -17,17 +16,29 @@ function createThemesTab({ currentFolder, window }) {
     parentBox.pack_start(content.addDescriptionBox(), false, false, 0);
     parentBox.pack_start(content.runAtStartBox(), false, false, 0);
     parentBox.pack_start(content.uploadWallPaperBox(), false, false, 0);
-    parentBox.pack_start(content.saveButton(), false, false, 0);
+    parentBox.pack_start(content.buttonList(), false, false, 0);
 
     return parentBox;
 }
 
 class CreateThemesContent {
-    constructor(currentFolder, userSavedThemes, window) {
+    constructor(currentFolder, window) {
         this.currentFolder = currentFolder;
-        this.themeList = userSavedThemes;
-        this.id = userSavedThemes.length;
-        this.themeList.push({
+        this.#setThemeList();
+        this.#setNewTheme();
+        this.wallpaper = null;
+        this.icon = null;
+        this.window = window;
+        this.themeCreated = false;
+    }
+
+    #setThemeList() {
+        this.themeList = dataModify.getUserSavedThemes(this.currentFolder)
+        this.id = this.themeList.length
+    }
+
+    #setNewTheme() {
+        this.themeList.unshift({
             id: this.id,
             selected: false,
             atStart: false,
@@ -38,23 +49,48 @@ class CreateThemesContent {
             description: "",
             wallpaper: "",
         })
-        this.theme = this.themeList[this.id]
-        this.wallpaper = null;
-        this.icon = null;
-        this.window = window
+        this.theme = this.themeList[0]
     }
 
-    uploadIconBox() {
+    #getContainer(labelText) {
         const container = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 10,
         });
         const label = new Gtk.Label({
-            label: "Icon to display on panel",
+            label: labelText,
             xalign: 0,
             hexpand: true,
         });
-        const fileChooser = new Gtk.FileChooserButton({
+        label.get_style_context().add_class("create-tab-option-box-label");
+        container.get_style_context().add_class("create-tab-option-box");
+        container.pack_start(label, false, true, 0);
+        return container;
+    }
+
+    settingItems = {
+        uploadIconContainer: this.#getContainer("Icon to display on panel"),
+        applicationThemeContainer: this.#getContainer("Application theme"),
+        shellThemeContainer: this.#getContainer("Shell theme"),
+        cursorContainer: this.#getContainer("Cursor"),
+        descriptionContainer: this.#getContainer("Description"),
+        wallpaperContainer: this.#getContainer("Wallpaper"),
+        atStartContainer: this.#getContainer("Apply at Startup"),
+        buttonListContainer: this.#getContainer(""),
+    }
+
+    userInteractionItems = {
+        iconChooser: null,
+        applicationThemeComboBox: null,
+        shellThemeComboBox: null,
+        cursorComboBox: null,
+        descriptionEntry: null,
+        wallpaperChooser: null,
+        atStartSwitch: null,
+    }
+
+    uploadIconBox() {
+        this.userInteractionItems.iconChooser = new Gtk.FileChooserButton({
             title: "Image files",
             action: Gtk.FileChooserAction.OPEN,
         });
@@ -63,9 +99,9 @@ class CreateThemesContent {
         fileFilter.add_mime_type("image/jpeg");
         fileFilter.add_mime_type("image/svg+xml");
         fileFilter.set_name("Image Files");
-        fileChooser.add_filter(fileFilter);
-        fileChooser.connect("file-set", () => {
-            const selectedFile = fileChooser.get_file();
+        this.userInteractionItems.iconChooser.add_filter(fileFilter);
+        this.userInteractionItems.iconChooser.connect("file-set", () => {
+            const selectedFile = this.userInteractionItems.iconChooser.get_file();
             const filePath = selectedFile.get_path();
             try {
                 const pixbuf = GdkPixbuf.Pixbuf.new_from_file(filePath);
@@ -84,7 +120,7 @@ class CreateThemesContent {
                         dialog.destroy();
                     });
                     dialog.show();
-                    fileChooser.set_file(null);
+                    this.userInteractionItems.iconChooser.set_file(null);
                     this.icon = null;
                     this.theme["icon"] = "";
                 } else {
@@ -98,124 +134,63 @@ class CreateThemesContent {
             }
 
         });
-        container.get_style_context().add_class("create-tab-option-box");
-        container.pack_start(label, false, true, 0);
-        container.pack_start(fileChooser, false, true, 0);
-        return container;
+        this.settingItems.uploadIconContainer.pack_start(this.userInteractionItems.iconChooser, false, true, 0);
+        return this.settingItems.uploadIconContainer;
     }
 
     chooseApplicationThemeBox() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
-        });
-        const label = new Gtk.Label({
-            label: "Application theme",
-            xalign: 0,
-            hexpand: true,
-        });
-        label.get_style_context().add_class("create-tab-option-box-label");
-        const comboBox = new Gtk.ComboBoxText();
+        this.userInteractionItems.applicationThemeComboBox = new Gtk.ComboBoxText();
         for (let i = 0; i <= 20; i++) {
-            comboBox.append_text(`Theme ${i}`);
+            this.userInteractionItems.applicationThemeComboBox.append_text(`Theme ${i}`);
         }
-        comboBox.set_active(0);
-        comboBox.connect("changed", () => {
-            const selectedText = comboBox.get_active_text();
+        this.userInteractionItems.applicationThemeComboBox.connect("changed", () => {
+            const selectedText = this.userInteractionItems.applicationThemeComboBox.get_active_text();
             this.theme["applicationTheme"] = selectedText;
         });
-        container.get_style_context().add_class("create-tab-option-box");
-        container.pack_start(label, false, true, 0);
-        container.pack_start(comboBox, false, true, 0);
-        return container;
+        this.settingItems.applicationThemeContainer.pack_start(this.userInteractionItems.applicationThemeComboBox, false, true, 0);
+        return this.settingItems.applicationThemeContainer;
     }
 
     chooseShellThemeBox() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
-        });
-        const label = new Gtk.Label({
-            label: "Shell theme",
-            xalign: 0,
-            hexpand: true,
-        });
-        label.get_style_context().add_class("create-tab-option-box-label");
-        const comboBox = new Gtk.ComboBoxText();
+        this.userInteractionItems.shellThemeComboBox = new Gtk.ComboBoxText();
         for (let i = 0; i <= 20; i++) {
-            comboBox.append_text(`Theme ${i}`);
+            this.userInteractionItems.shellThemeComboBox.append_text(`Theme ${i}`);
         }
-        comboBox.set_active(0);
-        comboBox.connect("changed", () => {
-            const selectedText = comboBox.get_active_text();
+        this.userInteractionItems.shellThemeComboBox.connect("changed", () => {
+            const selectedText = this.userInteractionItems.shellThemeComboBox.get_active_text();
             this.theme["shellTheme"] = selectedText
         });
-        container.get_style_context().add_class("create-tab-option-box");
-        container.pack_start(label, false, true, 0);
-        container.pack_start(comboBox, false, true, 0);
-        return container;
+        this.settingItems.shellThemeContainer.pack_start(this.userInteractionItems.shellThemeComboBox, false, true, 0);
+        return this.settingItems.shellThemeContainer;
     }
 
     chooseCursorBox() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
-        });
-        const label = new Gtk.Label({
-            label: "Cursor",
-            xalign: 0,
-            hexpand: true,
-        });
-        label.get_style_context().add_class("create-tab-option-box-label");
-        const comboBox = new Gtk.ComboBoxText();
+        this.userInteractionItems.cursorComboBox = new Gtk.ComboBoxText();
         for (let i = 0; i <= 20; i++) {
-            comboBox.append_text(`Theme ${i}`);
+            this.userInteractionItems.cursorComboBox.append_text(`Theme ${i}`);
         }
-        comboBox.set_active(0);
-        comboBox.connect("changed", () => {
-            const selectedText = comboBox.get_active_text();
+        this.userInteractionItems.cursorComboBox.connect("changed", () => {
+            const selectedText = this.userInteractionItems.cursorComboBox.get_active_text();
             this.theme["cursor"] = selectedText
         });
-        container.get_style_context().add_class("create-tab-option-box");
-        container.pack_start(label, false, true, 0);
-        container.pack_start(comboBox, false, true, 0);
-        return container;
+        this.settingItems.cursorContainer.pack_start(this.userInteractionItems.cursorComboBox, false, true, 0);
+        return this.settingItems.cursorContainer;
     }
 
     addDescriptionBox() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
-        });
-        const label = new Gtk.Label({
-            label: "Description",
-            xalign: 0,
-            hexpand: true,
-        });
-        const entry = new Gtk.Entry({
+        this.userInteractionItems.descriptionEntry = new Gtk.Entry({
             placeholder_text: "Enter description here...",
         });
-        entry.connect("changed", () => {
-            const description = entry.get_text();
+        this.userInteractionItems.descriptionEntry.connect("changed", () => {
+            const description = this.userInteractionItems.descriptionEntry.get_text();
             this.theme["description"] = description
         });
-        container.get_style_context().add_class("create-tab-option-box");
-        container.pack_start(label, false, true, 0);
-        container.pack_start(entry, false, true, 0);
-        return container;
+        this.settingItems.descriptionContainer.pack_start(this.userInteractionItems.descriptionEntry, false, true, 0);
+        return this.settingItems.descriptionContainer;
     }
 
     uploadWallPaperBox() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
-        });
-        const label = new Gtk.Label({
-            label: "Wallpaper",
-            xalign: 0,
-            hexpand: true,
-        });
-        const fileChooser = new Gtk.FileChooserButton({
+        this.userInteractionItems.wallpaperChooser = new Gtk.FileChooserButton({
             title: "Image files",
             action: Gtk.FileChooserAction.OPEN,
         });
@@ -224,32 +199,21 @@ class CreateThemesContent {
         fileFilter.add_mime_type("image/jpeg");
         fileFilter.add_mime_type("image/svg+xml");
         fileFilter.set_name("Image Files");
-        fileChooser.add_filter(fileFilter);
-        fileChooser.connect("file-set", () => {
-            this.wallpaper = fileChooser.get_file();
+        this.userInteractionItems.wallpaperChooser.add_filter(fileFilter);
+        this.userInteractionItems.wallpaperChooser.connect("file-set", () => {
+            this.wallpaper = this.userInteractionItems.wallpaperChooser.get_file();
             const filename = this.wallpaper.get_basename();
             this.theme["wallpaper"] = filename
         });
-        container.get_style_context().add_class("create-tab-option-box");
-        container.pack_start(label, false, true, 0);
-        container.pack_start(fileChooser, false, true, 0);
-        return container;
+        this.settingItems.wallpaperContainer.pack_start(this.userInteractionItems.wallpaperChooser, false, true, 0);
+        return this.settingItems.wallpaperContainer;
     }
 
     runAtStartBox() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
-        });
-        const label = new Gtk.Label({
-            label: "Apply at Startup",
-            xalign: 0,
-            hexpand: true,
-        });
-        const toggleButton = new Gtk.Switch({
+        this.userInteractionItems.atStartSwitch = new Gtk.Switch({
             active: false,
         });
-        toggleButton.connect("state-set", (button, state) => {
+        this.userInteractionItems.atStartSwitch.connect("state-set", (button, state) => {
             if (state) {
                 const dialog = new Gtk.MessageDialog({
                     transient_for: this.window,
@@ -266,13 +230,11 @@ class CreateThemesContent {
             }
             this.theme["atStart"] = state;
         });
-        container.pack_start(label, false, true, 0);
-        container.pack_start(toggleButton, false, true, 0);
-        container.get_style_context().add_class("create-tab-option-box");
-        return container;
+        this.settingItems.atStartContainer.pack_start(this.userInteractionItems.atStartSwitch, false, true, 0);
+        return this.settingItems.atStartContainer;
     }
 
-    uploadMedia() {
+    #uploadMedia() {
         const wallpaperFolder = `${this.currentFolder}/userMedia/wallpapers`
         const iconFolder = `${this.currentFolder}/userMedia/icons`
 
@@ -318,37 +280,85 @@ class CreateThemesContent {
         }
     }
 
-    saveButton() {
-        const container = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 10,
+    resetSettings() {
+        this.#setThemeList();
+        this.#setNewTheme();
+        this.icon = null;
+        this.wallpaper = null;
+        this.themeCreated = false;
+        this.userInteractionItems.iconChooser.unselect_all();
+        this.userInteractionItems.applicationThemeComboBox.set_active(-1);
+        this.userInteractionItems.shellThemeComboBox.set_active(-1);
+        this.userInteractionItems.cursorComboBox.set_active(-1);
+        this.userInteractionItems.descriptionEntry.set_text("");
+        this.userInteractionItems.wallpaperChooser.unselect_all();
+        this.userInteractionItems.atStartSwitch.set_active(false);
+    }
+
+    resetButton() {
+        const resetButton = new Gtk.Button({
+            label: "Reset",
+            hexpand: false,
+            vexpand: false,
         });
+        resetButton.connect("clicked", () => {
+            this.resetSettings();
+        });
+        resetButton.get_style_context().add_class("button-global");
+        return resetButton;
+    }
+
+    saveButton() {
         const saveButton = new Gtk.Button({
             label: "Save",
             hexpand: false,
             vexpand: false,
         });
         saveButton.connect("clicked", () => {
-            this.uploadMedia()
-            dataModify.setData(this.theme, this.currentFolder)
             const dialog = new Gtk.MessageDialog({
                 transient_for: this.window,
                 modal: true,
                 buttons: Gtk.ButtonsType.OK,
-                message_type: Gtk.MessageType.INFO,
-                text: "Created",
-                secondary_text: "Theme has been created. Please refresh.",
             });
+            if (!this.themeCreated) {
+                this.#uploadMedia()
+                if (this.theme.atStart) {
+                    this.themeList = this.themeList.map((theme) => {
+                        if (theme.id == this.id) {
+                            return this.theme
+                        } else {
+                            return {
+                                ...theme,
+                                atStart: false
+                            }
+                        }
+                    })
+                }
+                dataModify.setData(this.themeList, this.currentFolder);
+                dialog.message_type = Gtk.MessageType.INFO;
+                dialog.text = "Created";
+                dialog.secondary_text = "Theme has been created. Please refresh."
+                this.themeCreated = true;
+            } else {
+                dialog.message_type = Gtk.MessageType.WARNING;
+                dialog.text = "Already created";
+                dialog.secondary_text = "Theme has been already been created. Please reopen to create new theme."
+            }
             dialog.connect("response", () => {
+                this.resetSettings();
                 dialog.destroy();
             });
             dialog.show();
+            this.themeCreated = true;
         });
         saveButton.get_style_context().add_class("button-global");
+        return saveButton;
+    }
 
-        container.get_style_context().add_class("button-global-box");
-        container.pack_end(saveButton, false, false, 0);
-        return container;
+    buttonList() {
+        this.settingItems.buttonListContainer.pack_end(this.saveButton(), false, false, 0);
+        this.settingItems.buttonListContainer.pack_end(this.resetButton(), false, false, 0);
+        return this.settingItems.buttonListContainer;
     }
 
 }

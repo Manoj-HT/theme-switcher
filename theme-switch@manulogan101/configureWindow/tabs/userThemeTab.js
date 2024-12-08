@@ -152,7 +152,11 @@ class UserThemesTabContent {
                 orientation: Gtk.Orientation.HORIZONTAL,
                 spacing: 10,
             });
-            container.get_style_context().add_class("theme-tab-theme-option");
+            if (theme.atStart) {
+                container.get_style_context().add_class("theme-tab-theme-option-start");
+            } else {
+                container.get_style_context().add_class("theme-tab-theme-option");
+            }
             container.pack_start(this.listItems.icon(theme.icon), false, false, 0);
             container.pack_start(this.listItems.wallpaper(theme.wallpaper), false, false, 0);
             container.pack_start(this.listItems.themeName(theme.description), false, false, 0);

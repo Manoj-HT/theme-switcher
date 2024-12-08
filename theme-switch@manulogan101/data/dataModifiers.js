@@ -2,9 +2,7 @@ const { Gio, GLib } = imports.gi;
 
 function setData(themeData, path) {
     const filePath = `${path}/data/userThemes.json`
-    let currentSavedThemes = readJson(filePath)
-    currentSavedThemes.unshift(themeData)
-    writeJson(filePath, currentSavedThemes);
+    writeJson(filePath, themeData);
 }
 
 function getUserSavedThemes(path){
