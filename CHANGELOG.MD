@@ -1,3 +1,10 @@
+# 18
+
+1. delete function added
+2. refresh button moved to top
+3. refresh button changed to icon
+4. destroying variables after changing tabs to refresh page automatically
+
 # 17
 
 1. styles changed for setting items

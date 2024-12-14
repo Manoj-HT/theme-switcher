@@ -82,6 +82,18 @@ class ConfigureWindow {
         }
         notebook.append_page(userThemesTab(params), new Gtk.Label({ label: "Themes" }));
         notebook.append_page(createThemesTab(params), new Gtk.Label({ label: "Create" }));
+        notebook.connect("switch-page", (notebook, page, pageNumber) => {
+            const currentTab = notebook.get_nth_page(pageNumber);
+            currentTab.foreach((widget) => widget.destroy());
+            if (pageNumber === 0) {
+                const newContent = userThemesTab(params)
+                currentTab.add(newContent);
+            } else if (pageNumber === 1) {
+                const newContent = createThemesTab(params)
+                currentTab.add(newContent);
+            }
+            currentTab.show_all()
+        });
 
         // window configuration
         this.window.set_decorated(true);

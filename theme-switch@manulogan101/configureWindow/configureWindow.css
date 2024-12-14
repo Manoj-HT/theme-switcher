@@ -19,6 +19,7 @@
 .theme-tab-theme-option {
     padding: 20px 40px;
     margin-bottom: 20px;
+    border-left: 3px solid transparent;
 }
 
 .theme-tab-theme-option-start {
@@ -27,9 +28,20 @@
     border-left: 3px solid greenyellow;
 }
 
+.theme-tab-theme-option-selected {
+    padding: 20px 40px;
+    margin-bottom: 20px;
+    border-left: 3px solid skyblue;
+}
+
 .theme-tab-theme-list {
     padding: 25px;
     margin: 10px 50px 10px 50px;
     border-radius: 20px;
     border: 2px solid lightgray;
+}
+
+.theme-tab-refresh-button {
+    margin: 10px 50px 0 50px;
+    border-radius: 20px;
 }

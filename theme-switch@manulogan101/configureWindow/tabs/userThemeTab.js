@@ -6,9 +6,12 @@ function userThemesTab({ currentFolder, window }) {
         orientation: Gtk.Orientation.VERTICAL,
         spacing: 10,
     });
+
     const content = new UserThemesTabContent(currentFolder, window)
+
+    parentBox.pack_start(content.refreshButtonBox(), false, true, 0);
     parentBox.pack_start(content.themeListBox(), true, true, 0)
-    parentBox.pack_start(content.saveButtonBox(), false, true, 0);
+
     return parentBox;
 }
 
@@ -21,7 +24,7 @@ class UserThemesTabContent {
         this.window = window
     }
 
-    saveButtonBox() {
+    refreshButtonBox() {
         const container = new Gtk.Box({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 10,
@@ -32,15 +35,19 @@ class UserThemesTabContent {
             hexpand: true,
         });
         const button = new Gtk.Button({
-            label: "Refresh",
             hexpand: false,
             vexpand: false,
         });
+        const icon = new Gtk.Image({
+            icon_name: "view-refresh-symbolic",
+            icon_size: Gtk.IconSize.BUTTON,
+        });
+        button.set_image(icon);
         button.connect("clicked", () => {
             this.update()
         });
         button.get_style_context().add_class("button-global");
-        container.get_style_context().add_class("theme-tab-theme-list");
+        container.get_style_context().add_class("theme-tab-refresh-button");
         container.pack_start(label, false, true, 0);
         container.pack_start(button, false, true, 0);
         return container;
@@ -68,28 +75,34 @@ class UserThemesTabContent {
 
     listItems = {
         icon: (iconName) => {
-            const iconPath = `${this.currentFolder}/userMedia/icons/${iconName}`;
+            let iconPath = ''
+            if (iconName !== '') {
+                iconPath = `${this.currentFolder}/userMedia/icons/${iconName}`;
+            } else {
+                iconPath = `${this.currentFolder}/media/no-image.svg`;
+            }
             let icon = new Gtk.Image();
-            if (iconName != "") {
-                try {
-                    const pixbufIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(iconPath, 64, 64);
-                    icon.set_from_pixbuf(pixbufIcon);
-                } catch (error) {
-                    console.error(`Error loading icon: ${error.message}`);
-                }
+            try {
+                const pixbufIcon = GdkPixbuf.Pixbuf.new_from_file_at_size(iconPath, 64, 64);
+                icon.set_from_pixbuf(pixbufIcon);
+            } catch (error) {
+                console.error(`Error loading icon: ${error.message}`);
             }
             return icon
         },
         wallpaper: (wallpaperName) => {
-            const wallpaperPath = `${this.currentFolder}/userMedia/wallpapers/${wallpaperName}`;
+            let wallpaperPath = ''
+            if (wallpaperName !== '') {
+                wallpaperPath = `${this.currentFolder}/userMedia/wallpapers/${wallpaperName}`;
+            } else {
+                wallpaperPath = `${this.currentFolder}/media/no-image.svg`;
+            }
             let wallpaper = new Gtk.Image();
-            if (wallpaperName != "") {
-                try {
-                    const pixbufWallpaper = GdkPixbuf.Pixbuf.new_from_file_at_size(wallpaperPath, 64, 64)
-                    wallpaper.set_from_pixbuf(pixbufWallpaper)
-                } catch (error) {
-                    console.error(`Error loading icon: ${error.message}`);
-                }
+            try {
+                const pixbufWallpaper = GdkPixbuf.Pixbuf.new_from_file_at_size(wallpaperPath, 64, 64)
+                wallpaper.set_from_pixbuf(pixbufWallpaper)
+            } catch (error) {
+                console.error(`Error loading icon: ${error.message}`);
             }
             return wallpaper
         },
@@ -129,7 +142,25 @@ class UserThemesTabContent {
             button.set_always_show_image(true);
             button.get_style_context().add_class("button-global");
             button.connect("clicked", () => {
-                console.log(`Deleting theme: ${theme.description}`);
+                const dialog = new Gtk.MessageDialog({
+                    transient_for: this.window,
+                    modal: true,
+                    buttons: Gtk.ButtonsType.NONE,
+                    message_type: Gtk.MessageType.QUESTION,
+                    text: "Delete theme",
+                    secondary_text: `Are you sure you want to delete theme ${theme.description}`,
+                });
+                dialog.add_button("Cancel", Gtk.ResponseType.CANCEL);
+                dialog.add_button("Delete", Gtk.ResponseType.OK);
+                dialog.connect("response", (dialog, response) => {
+                    if (response === Gtk.ResponseType.OK) {
+                        this.deleteTheme(theme)
+                    } else if (response === Gtk.ResponseType.CANCEL) {
+                    }
+                    dialog.destroy();
+                });
+                dialog.show();
+
             });
             return button;
         },
@@ -152,7 +183,9 @@ class UserThemesTabContent {
                 orientation: Gtk.Orientation.HORIZONTAL,
                 spacing: 10,
             });
-            if (theme.atStart) {
+            if (theme.selected) {
+                container.get_style_context().add_class("theme-tab-theme-option-selected");
+            } else if (theme.atStart) {
                 container.get_style_context().add_class("theme-tab-theme-option-start");
             } else {
                 container.get_style_context().add_class("theme-tab-theme-option");
@@ -170,5 +203,12 @@ class UserThemesTabContent {
 
     editSavedThemes(theme) {
         console.log(`Editing theme: ${theme.description}`);
+    }
+
+    deleteTheme(theme) {
+        const index = this.themeList.findIndex((th) => th.id == theme.id)
+        this.themeList.splice(index, 1)
+        dataModify.setData(this.themeList, this.currentFolder);
+        this.update()
     }
 }

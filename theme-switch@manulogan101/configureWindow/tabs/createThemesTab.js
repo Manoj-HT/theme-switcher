@@ -6,7 +6,6 @@ function createThemesTab({ currentFolder, window }) {
         orientation: Gtk.Orientation.VERTICAL,
         spacing: 10,
     });
-
     const content = new CreateThemesContent(currentFolder, window)
 
     parentBox.pack_start(content.uploadIconBox(), false, false, 0);
@@ -29,16 +28,15 @@ class CreateThemesContent {
         this.wallpaper = null;
         this.icon = null;
         this.window = window;
-        this.themeCreated = false;
     }
 
     #setThemeList() {
-        this.themeList = dataModify.getUserSavedThemes(this.currentFolder)
-        this.id = this.themeList.length
+        this.themeList = dataModify.getUserSavedThemes(this.currentFolder);
+        this.id = this.themeList.length;
     }
 
     #setNewTheme() {
-        this.themeList.unshift({
+        this.theme = {
             id: this.id,
             selected: false,
             atStart: false,
@@ -48,8 +46,7 @@ class CreateThemesContent {
             cursor: "",
             description: "",
             wallpaper: "",
-        })
-        this.theme = this.themeList[0]
+        }
     }
 
     #getContainer(labelText) {
@@ -120,7 +117,7 @@ class CreateThemesContent {
                         dialog.destroy();
                     });
                     dialog.show();
-                    this.userInteractionItems.iconChooser.set_file(null);
+                    this.userInteractionItems.iconChooser.unselect_all();
                     this.icon = null;
                     this.theme["icon"] = "";
                 } else {
@@ -285,7 +282,6 @@ class CreateThemesContent {
         this.#setNewTheme();
         this.icon = null;
         this.wallpaper = null;
-        this.themeCreated = false;
         this.userInteractionItems.iconChooser.unselect_all();
         this.userInteractionItems.applicationThemeComboBox.set_active(-1);
         this.userInteractionItems.shellThemeComboBox.set_active(-1);
@@ -320,8 +316,8 @@ class CreateThemesContent {
                 modal: true,
                 buttons: Gtk.ButtonsType.OK,
             });
-            if (!this.themeCreated) {
                 this.#uploadMedia()
+                this.#setThemeList();
                 if (this.theme.atStart) {
                     this.themeList = this.themeList.map((theme) => {
                         if (theme.id == this.id) {
@@ -334,22 +330,16 @@ class CreateThemesContent {
                         }
                     })
                 }
+                this.themeList.unshift(this.theme);
                 dataModify.setData(this.themeList, this.currentFolder);
                 dialog.message_type = Gtk.MessageType.INFO;
                 dialog.text = "Created";
-                dialog.secondary_text = "Theme has been created. Please refresh."
-                this.themeCreated = true;
-            } else {
-                dialog.message_type = Gtk.MessageType.WARNING;
-                dialog.text = "Already created";
-                dialog.secondary_text = "Theme has been already been created. Please reopen to create new theme."
-            }
+                dialog.secondary_text = "Theme has been created"
             dialog.connect("response", () => {
                 this.resetSettings();
                 dialog.destroy();
             });
             dialog.show();
-            this.themeCreated = true;
         });
         saveButton.get_style_context().add_class("button-global");
         return saveButton;
