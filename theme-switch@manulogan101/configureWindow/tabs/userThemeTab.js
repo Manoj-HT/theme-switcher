@@ -1,16 +1,16 @@
 const { Gtk, GLib, Gio, GdkPixbuf } = imports.gi;
 const dataModify = imports.data.dataModifiers
-
+const { moduleExports } = imports.configureWindow.tabs.createThemesTab
 function userThemesTab({ currentFolder, window }) {
     const parentBox = new Gtk.Box({
         orientation: Gtk.Orientation.VERTICAL,
-        spacing: 10,
     });
 
     const content = new UserThemesTabContent(currentFolder, window)
 
-    parentBox.pack_start(content.refreshButtonBox(), false, true, 0);
-    parentBox.pack_start(content.themeListBox(), true, true, 0)
+    // parentBox.pack_start(content.refreshButtonBox(), false, true, 0);
+    // parentBox.pack_start(content.themeListBox(), true, true, 0)
+    parentBox.pack_start(content.mainView(), true, true, 0);
 
     return parentBox;
 }
@@ -19,9 +19,31 @@ class UserThemesTabContent {
     constructor(currentFolder, window) {
         this.currentFolder = currentFolder;
         this.themeList = dataModify.getUserSavedThemes(currentFolder);
-        this.scrollableContainer = null;
-        this.themeListContainer = null;
-        this.window = window
+        this.window = window;
+        this.initContainers();
+        this.update();
+        this.themeListView();
+    }
+
+    initContainers() {
+        this.mainViewBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 10,
+        });
+        this.scrollableContainer = new Gtk.ScrolledWindow({
+            vexpand: true,
+            hexpand: true,
+        });
+        this.themeListContainer = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 10,
+        });
+        this.scrollableContainer.add(this.themeListContainer);
+        this.scrollableContainer.get_style_context().add_class("theme-tab-theme-list")
+    }
+
+    mainView() {
+        return this.mainViewBox;
     }
 
     refreshButtonBox() {
@@ -58,19 +80,13 @@ class UserThemesTabContent {
         this.addThemes()
     }
 
-    themeListBox() {
-        this.scrollableContainer = new Gtk.ScrolledWindow({
-            vexpand: true,
-            hexpand: true,
-        });
-        this.themeListContainer = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            spacing: 10,
-        });
-        this.scrollableContainer.add(this.themeListContainer);
-        this.addThemes();
-        this.scrollableContainer.get_style_context().add_class("theme-tab-theme-list")
-        return this.scrollableContainer;
+    themeListView() {
+        this.mainViewBox.foreach((child) => {
+            this.mainViewBox.remove(child)
+        })
+        this.mainViewBox.pack_start(this.refreshButtonBox(), false, true, 0)
+        this.mainViewBox.pack_start(this.scrollableContainer, false, true, 0)
+        this.mainViewBox.show_all()
     }
 
     listItems = {
@@ -177,7 +193,7 @@ class UserThemesTabContent {
     }
 
     addThemes() {
-        this.themeListContainer.foreach(child => this.themeListContainer.remove(child));
+        this.themeListContainer.foreach(child => child.destroy());
         for (const theme of this.themeList) {
             const container = new Gtk.Box({
                 orientation: Gtk.Orientation.HORIZONTAL,
@@ -202,7 +218,78 @@ class UserThemesTabContent {
     }
 
     editSavedThemes(theme) {
-        console.log(`Editing theme: ${theme.description}`);
+        this.mainViewBox.foreach((child) => {
+            this.mainViewBox.remove(child)
+        })
+        const editContent = new moduleExports.CreateThemesContent(this.currentFolder, this.window, theme);
+        this.editView(editContent)
+    }
+
+    editButtonsBox(contentClass) {
+        const container = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 10,
+        })
+        const label = new Gtk.Label({
+            label: "",
+            xalign: 0,
+            hexpand: true,
+        });
+        const updateButton = new Gtk.Button({
+            hexpand: false,
+            vexpand: false,
+            label: "Update"
+        });
+        const cancelButton = new Gtk.Button({
+            hexpand: false,
+            vexpand: false,
+            label: "Cancel"
+        });
+        updateButton.connect("clicked", () => {
+            const updatedTheme = contentClass.getThemeObject();
+            const index = this.themeList.findIndex(th => th.id == updatedTheme.id);
+            const dialog = new Gtk.MessageDialog({
+                transient_for: this.window,
+                modal: true,
+                buttons: Gtk.ButtonsType.OK,
+                text: "Updated",
+                secondary_text: `${updatedTheme.description} has been updated`
+            });
+            dialog.connect("response", () => {
+                if(updatedTheme.atStart){
+                    this.themeList = this.themeList.map((th) => ({...th, atStart: false}))
+                }
+                this.themeList[index] = updatedTheme;
+                dataModify.setData(this.themeList, this.currentFolder);
+                this.update();
+                this.themeListView();
+                dialog.destroy();
+            });
+            dialog.show();
+        });
+        cancelButton.connect("clicked", () => {
+            this.update();
+            this.themeListView();
+        });
+        cancelButton.get_style_context().add_class("button-global");
+        updateButton.get_style_context().add_class("button-global");
+        container.get_style_context().add_class("theme-tab-refresh-button");
+        container.pack_start(label, false, true, 0);
+        container.pack_start(cancelButton, false, true, 0);
+        container.pack_start(updateButton, false, true, 0);
+        return container;
+    }
+
+    editView(content) {
+        this.mainViewBox.pack_start(content.uploadIconBox(), false, false, 0);
+        this.mainViewBox.pack_start(content.chooseApplicationThemeBox(), false, false, 0);
+        this.mainViewBox.pack_start(content.chooseShellThemeBox(), false, false, 0);
+        this.mainViewBox.pack_start(content.chooseCursorBox(), false, false, 0);
+        this.mainViewBox.pack_start(content.addDescriptionBox(), false, false, 0);
+        this.mainViewBox.pack_start(content.runAtStartBox(), false, false, 0);
+        this.mainViewBox.pack_start(content.uploadWallPaperBox(), false, false, 0);
+        this.mainViewBox.pack_start(this.editButtonsBox(content), false, false, 0);
+        this.mainViewBox.show_all()
     }
 
     deleteTheme(theme) {

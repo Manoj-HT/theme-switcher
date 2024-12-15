@@ -2,23 +2,12 @@
     {
         "id": 1,
         "selected": false,
-        "atStart": false,
+        "atStart": true,
         "icon": "",
         "applicationTheme": "Theme 1",
         "shellTheme": "Theme 2",
         "cursor": "Theme 3",
-        "description": "dfg",
+        "description": "my theme",
         "wallpaper": ""
-    },
-    {
-        "id": 0,
-        "selected": false,
-        "atStart": true,
-        "icon": "drawing.svg",
-        "applicationTheme": "Theme 1",
-        "shellTheme": "Theme 2",
-        "cursor": "Theme 3",
-        "description": "efdfew",
-        "wallpaper": "nature-images..jpg"
     }
 ]

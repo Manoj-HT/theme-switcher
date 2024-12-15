@@ -21,10 +21,15 @@ function createThemesTab({ currentFolder, window }) {
 }
 
 class CreateThemesContent {
-    constructor(currentFolder, window) {
+    constructor(currentFolder, window, editTheme) {
         this.currentFolder = currentFolder;
-        this.#setThemeList();
-        this.#setNewTheme();
+        this.editTheme = editTheme;
+        if (!editTheme) {
+            this.#setThemeList();
+            this.#setNewTheme();
+        } else {
+            this.#updateTheme();
+        }
         this.wallpaper = null;
         this.icon = null;
         this.window = window;
@@ -46,6 +51,20 @@ class CreateThemesContent {
             cursor: "",
             description: "",
             wallpaper: "",
+        }
+    }
+
+    #updateTheme() {
+        this.theme = {
+            id: this.editTheme.id,
+            selected: this.editTheme.selected,
+            atStart: this.editTheme.atStart,
+            icon: this.editTheme.icon,
+            applicationTheme: this.editTheme.applicationTheme,
+            shellTheme: this.editTheme.shellTheme,
+            cursor: this.editTheme.cursor,
+            description: this.editTheme.description,
+            wallpaper: this.editTheme.wallpaper,
         }
     }
 
@@ -97,6 +116,11 @@ class CreateThemesContent {
         fileFilter.add_mime_type("image/svg+xml");
         fileFilter.set_name("Image Files");
         this.userInteractionItems.iconChooser.add_filter(fileFilter);
+        if (this.editTheme) {
+            const iconFolder = `${this.currentFolder}/userMedia/icons/${this.editTheme.icon}`
+            const file = Gio.File.new_for_path(iconFolder);
+            this.userInteractionItems.iconChooser.set_file(file);
+        }
         this.userInteractionItems.iconChooser.connect("file-set", () => {
             const selectedFile = this.userInteractionItems.iconChooser.get_file();
             const filePath = selectedFile.get_path();
@@ -137,8 +161,14 @@ class CreateThemesContent {
 
     chooseApplicationThemeBox() {
         this.userInteractionItems.applicationThemeComboBox = new Gtk.ComboBoxText();
+        const themeArr = []
         for (let i = 0; i <= 20; i++) {
             this.userInteractionItems.applicationThemeComboBox.append_text(`Theme ${i}`);
+            themeArr.push(`Theme ${i}`);
+        }
+        if (this.editTheme) {
+            const index = themeArr.findIndex((th) => th == this.editTheme.applicationTheme)
+            this.userInteractionItems.applicationThemeComboBox.set_active(index);
         }
         this.userInteractionItems.applicationThemeComboBox.connect("changed", () => {
             const selectedText = this.userInteractionItems.applicationThemeComboBox.get_active_text();
@@ -150,8 +180,14 @@ class CreateThemesContent {
 
     chooseShellThemeBox() {
         this.userInteractionItems.shellThemeComboBox = new Gtk.ComboBoxText();
+        const themeArr = []
         for (let i = 0; i <= 20; i++) {
             this.userInteractionItems.shellThemeComboBox.append_text(`Theme ${i}`);
+            themeArr.push(`Theme ${i}`);
+        }
+        if (this.editTheme) {
+            const index = themeArr.findIndex((th) => th == this.editTheme.shellTheme)
+            this.userInteractionItems.shellThemeComboBox.set_active(index);
         }
         this.userInteractionItems.shellThemeComboBox.connect("changed", () => {
             const selectedText = this.userInteractionItems.shellThemeComboBox.get_active_text();
@@ -163,8 +199,14 @@ class CreateThemesContent {
 
     chooseCursorBox() {
         this.userInteractionItems.cursorComboBox = new Gtk.ComboBoxText();
+        const themeArr = []
         for (let i = 0; i <= 20; i++) {
             this.userInteractionItems.cursorComboBox.append_text(`Theme ${i}`);
+            themeArr.push(`Theme ${i}`);
+        }
+        if (this.editTheme) {
+            const index = themeArr.findIndex((th) => th == this.editTheme.shellTheme)
+            this.userInteractionItems.cursorComboBox.set_active(index);
         }
         this.userInteractionItems.cursorComboBox.connect("changed", () => {
             const selectedText = this.userInteractionItems.cursorComboBox.get_active_text();
@@ -178,6 +220,9 @@ class CreateThemesContent {
         this.userInteractionItems.descriptionEntry = new Gtk.Entry({
             placeholder_text: "Enter description here...",
         });
+        if (this.editTheme) {
+            this.userInteractionItems.descriptionEntry.set_text(this.editTheme.description);
+        }
         this.userInteractionItems.descriptionEntry.connect("changed", () => {
             const description = this.userInteractionItems.descriptionEntry.get_text();
             this.theme["description"] = description
@@ -197,6 +242,11 @@ class CreateThemesContent {
         fileFilter.add_mime_type("image/svg+xml");
         fileFilter.set_name("Image Files");
         this.userInteractionItems.wallpaperChooser.add_filter(fileFilter);
+        if (this.editTheme) {
+            const wallpaperFolder = `${this.currentFolder}/userMedia/wallpapers/${this.editTheme.wallpaper}`
+            const file = Gio.File.new_for_path(wallpaperFolder);
+            this.userInteractionItems.wallpaperChooser.set_file(file);
+        }
         this.userInteractionItems.wallpaperChooser.connect("file-set", () => {
             this.wallpaper = this.userInteractionItems.wallpaperChooser.get_file();
             const filename = this.wallpaper.get_basename();
@@ -210,6 +260,9 @@ class CreateThemesContent {
         this.userInteractionItems.atStartSwitch = new Gtk.Switch({
             active: false,
         });
+        if (this.editTheme) {
+            this.userInteractionItems.atStartSwitch.set_active(this.editTheme.atStart);
+        }
         this.userInteractionItems.atStartSwitch.connect("state-set", (button, state) => {
             if (state) {
                 const dialog = new Gtk.MessageDialog({
@@ -316,25 +369,25 @@ class CreateThemesContent {
                 modal: true,
                 buttons: Gtk.ButtonsType.OK,
             });
-                this.#uploadMedia()
-                this.#setThemeList();
-                if (this.theme.atStart) {
-                    this.themeList = this.themeList.map((theme) => {
-                        if (theme.id == this.id) {
-                            return this.theme
-                        } else {
-                            return {
-                                ...theme,
-                                atStart: false
-                            }
+            this.#uploadMedia()
+            this.#setThemeList();
+            if (this.theme.atStart) {
+                this.themeList = this.themeList.map((theme) => {
+                    if (theme.id == this.id) {
+                        return this.theme
+                    } else {
+                        return {
+                            ...theme,
+                            atStart: false
                         }
-                    })
-                }
-                this.themeList.unshift(this.theme);
-                dataModify.setData(this.themeList, this.currentFolder);
-                dialog.message_type = Gtk.MessageType.INFO;
-                dialog.text = "Created";
-                dialog.secondary_text = "Theme has been created"
+                    }
+                })
+            }
+            this.themeList.unshift(this.theme);
+            dataModify.setData(this.themeList, this.currentFolder);
+            dialog.message_type = Gtk.MessageType.INFO;
+            dialog.text = "Created";
+            dialog.secondary_text = "Theme has been created"
             dialog.connect("response", () => {
                 this.resetSettings();
                 dialog.destroy();
@@ -351,4 +404,12 @@ class CreateThemesContent {
         return this.settingItems.buttonListContainer;
     }
 
+    getThemeObject() {
+        return this.theme;
+    }
+
+}
+
+var moduleExports = {
+    CreateThemesContent
 }

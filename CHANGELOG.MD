@@ -1,3 +1,8 @@
+# 19
+
+1. added todo to keep track on new features to add
+2. added edit functionality
+
 # 18
 
 1. delete function added
